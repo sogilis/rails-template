@@ -6,6 +6,7 @@ github_repo         = "http://github.com/#{organization}/#{@app_name}"
 create_github_repo  = `gem search github | grep github`.present? && yes?("Create #{github_repo} and push ?")
 private_repo        = yes?("Make #{github_repo} private ?") if create_github_repo
 push_to_github      = create_github_repo ? false : yes?("Push to #{github_repo} ?")
+init_git_repo       = yes?('Setup a git repository ?')
 heroku_url          = "http://#{@app_name}.heroku.com/"
 deploy_on_heroku    = yes? "Deploy to #{heroku_url} ?"
 
@@ -107,22 +108,42 @@ run 'bundle install'
 generate 'rspec:install'
 generate 'simple_form:install'
 
+##### Configure Generators ####################################################
+application do
+  '
+  config.generators do |g|
+    g.assets false
+    g.helper false
+    g.test_framework :rspec,
+     :fixtures => true,
+     :view_specs => false,
+     :helper_specs => false,
+     :routing_specs => false,
+     :controller_specs => true,
+     :request_specs => true
+    g.fixture_replacement :factory_girl, :dir => "spec/factories"
+  end
+  '
+end
+
 ##### Git #####################################################################
-git :init
-git :add    => '.'
-git :commit => '-m "Generated project"'
+if init_git_repo
+  git :init
+  git :add    => '.'
+  git :commit => '-m "Generated project"'
 
-if create_github_repo
+  if create_github_repo
 
-  run "github config #{organization}"
-  run "github create-from-local #{'--private' if private_repo}"
-  run 'github config'
+    run "github config #{organization}"
+    run "github create-from-local #{'--private' if private_repo}"
+    run 'github config'
 
-elsif push_to_github
+  elsif push_to_github
 
-  git :remote => "add origin git@github.com:#{organization}/#{@app_name}.git"
-  git :push   => 'origin master'
+    git :remote => "add origin git@github.com:#{organization}/#{@app_name}.git"
+    git :push   => 'origin master'
 
+  end
 end
 
 ##### Heroku ##################################################################
