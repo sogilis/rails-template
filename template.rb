@@ -15,9 +15,9 @@ gsub_file 'Gemfile', /gem 'sqlite3'/, "gem 'pg', :require => 'pg'"
 gem 'thin'
 gem 'foreman'
 gem 'devise' if use_devise
-gem 'param_protected'
 
-gem 'cucumber-rails',   :group => :test
+gem 'simple_form'
+
 gem 'database_cleaner', :group => :test
 gem 'capybara',         :group => :test
 
@@ -52,7 +52,6 @@ file 'README.md', <<MARKDOWN
 ## Running tests
 
     bundle exec rspec
-    bundle exec cucumber
 
 MARKDOWN
 
@@ -64,6 +63,7 @@ MARKDOWN
 
 file 'Procfile', <<PROCFILE
 web: bundle exec thin start -p $PORT
+db: postgres -D /usr/local/var/postgres
 PROCFILE
 
 file 'config/database.yml', <<YML
@@ -104,8 +104,8 @@ YML
 ##### Install #################################################################
 run 'bundle install'
 
-generate 'cucumber:install', '--rspec --capybara'
 generate 'rspec:install'
+generate 'simple_form:install'
 
 ##### Git #####################################################################
 git :init
@@ -127,7 +127,7 @@ end
 
 ##### Heroku ##################################################################
 if deploy_on_heroku
-  run "heroku create #{@app_name} --stack cedar"
+  run "heroku create #{@app_name}"
   git :push => 'heroku master'
   run 'heroku run rake db:migrate'
 end
